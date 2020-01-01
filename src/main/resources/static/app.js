@@ -11,10 +11,12 @@ window.onload = ()=> {
     user = location.search.substr(1)
 
     var ele = (s, p)=> (p||document).querySelector(s),
-        ul = ele("ul"), inp = ele("input"), content = ele("#content"), users = ele("#users"), status = ele("#status"),
-        handle = (msg)=> {
-            msg.users ? renderUsers(msg) : renderMsg(msg)
-        },
+        ul = ele("ul"), inp = ele("input"), users = ele("#users"), status = ele("#status"),
+        client = MessageBrokerClient({
+            connected: ()=> client.send("SUBSCRIBE", "/chat/"+user),
+            status: (txt)=> status.textContent = txt,
+            handle: (msg)=> msg.users ? renderUsers(msg) : renderMsg(msg)
+        }),
         renderUsers = (msg)=> {
             users.textContent = msg.users.filter((u)=> u != user).join(", ")
         },
@@ -27,48 +29,7 @@ window.onload = ()=> {
 
             ul.appendChild(li)
             li.scrollIntoView()
-        },
-
-        client = (()=> {
-            var socket,
-                reconnects = 0,
-                scheduled,        
-                schedule = (millis)=> {
-                    if (!scheduled ) {
-                        scheduled = true
-                        setTimeout(connect, millis)
-                        if (millis > 3000)
-                            tick(new Date(+new Date() + millis))
-                    }
-                },
-                tick = (until)=> {
-                    var seconds = Math.round((+until - +new Date()) / 1000);
-                    status.textContent = "reconnect attempt " + reconnects + " in " + seconds + " seconds"
-                    if (seconds > 0) setTimeout(()=> tick(until), 1000)
-                },
-                connect = ()=> {
-                    scheduled = false
-                    if (reconnects > 90) reconnects = 30
-
-                    socket = new WebSocket("ws"+location.protocol.substr(4)+"//"+location.host+"/broker")
-                    socket.onmessage = (m)=> handle(JSON.parse(JSON.parse(m.data).payload))
-                    socket.onclose = ()=> schedule(500)
-                    socket.onerror = ()=> schedule(2000 * ++reconnects)
-                    socket.onopen = ()=> {
-                        reconnects = 0
-                        send("SUBSCRIBE", "/chat/"+user)
-                        status.textContent = 'online'
-                    }
-                },
-                send = (type, topic, payload)=> {
-                    if (payload) payload.user = user
-                    socket.send(JSON.stringify({type:type, topic:topic, payload: payload ? JSON.stringify(payload) : undefined}))
-                }
-            connect()
-            return {
-                send: send
-            }
-        })()
+        }
 
     inp.focus()
 
@@ -79,7 +40,7 @@ window.onload = ()=> {
     window.app = {
         send: (text)=> {
             if (text = text || inp.value) {
-                client.send("PUBLISH", "/chat/**", {text: text})
+                client.send("PUBLISH", "/chat/**", {text: text, user: user})
                 if (text == inp.value) inp.value = ""
             }
         }
