@@ -1,13 +1,13 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '2.1.6.RELEASE'
-    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+    id 'org.springframework.boot' version '2.2.5.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
 }
 
 def release = project.hasProperty('release')
 def debug = !release
 
-version = '0.1.0.' + (release ? 'RELEASE' : 'SNAPSHOT')
+version = '0.1.1.' + (release ? 'RELEASE' : 'SNAPSHOT')
 group 'org.molkex.spring'
 
 sourceCompatibility = 1.8
@@ -22,10 +22,10 @@ dependencies {
         implementation("org.springframework.boot:spring-boot-devtools")
     }
 
-    implementation 'org.springframework.boot:spring-boot-dependencies:2.1.6.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-dependencies:2.2.5.RELEASE'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    implementation 'org.molkex.spring:minimalrest:0.1.1.SNAPSHOT'
+    implementation 'org.molkex.spring:minimalrest:0.1.2.SNAPSHOT'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
